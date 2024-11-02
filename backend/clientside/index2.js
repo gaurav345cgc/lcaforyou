@@ -153,7 +153,7 @@ app.post("/export-data", async (req, res) => {
       res.status(400).json({ message: "Invalid format specified" });
     }
   } catch (error) {
-    console.error("Error exporting data:", error);
+    console.error("Error exporting data Or No Data Available", error);
     res.status(500).json({ message: "Export failed", error });
   }
 });
