@@ -8,7 +8,7 @@ const ExportReportsComponent = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [formData, setFormData] = useState({
     startDate: "",
-    startTime: "00:00",
+    startTime: "00:00", 
     startSeconds: "00",
     endDate: "",
     endTime: "23:59",
@@ -142,30 +142,52 @@ const ExportReportsComponent = () => {
             </motion.div>
 
             <div className="space-y-6">
-              <div className="flex gap-2 mb-4">
-                <button onClick={() => setTimeRange(24, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                  Last 24 Hours
-                </button>
-                <button onClick={() => setTimeRange(1, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                  Last 1 Hour
-                </button>
-                <button onClick={() => setTimeRange(48, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
+              <div className="flex flex-wrap gap-3 mb-6">
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTimeRange(1, 0)} 
+                  className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} 
+                    text-white py-2 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2`}
+                >
+                  <Icon icon="mdi:clock-time-one" className="w-5 h-5" />
+                  Last Hour
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTimeRange(24, 0)} 
+                  className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}
+                    text-white py-2 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2`}
+                >
+                  <Icon icon="mdi:calendar-today" className="w-5 h-5" />
+                  Last Day
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setTimeRange(48, 0)} 
+                  className={`${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'}
+                    text-white py-2 px-6 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2`}
+                >
+                  <Icon icon="mdi:calendar-week" className="w-5 h-5" />
                   Last 2 Days
-                </button>
-                <button onClick={() => setTimeRange(0, 30)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
-                  Last 30 Minutes
-                </button>
+                </motion.button>
               </div>
 
               {/* Date and Time Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Start Date */}
-                <motion.div whileHover={{ scale: 1.02 }}>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="relative"
+                >
                   <label
                     className={`block text-sm font-medium mb-2 ${
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
+                    <Icon icon="mdi:calendar-start" className="w-5 h-5 inline mr-2" />
                     Start Date
                   </label>
                   <input
@@ -173,21 +195,25 @@ const ExportReportsComponent = () => {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 rounded-lg border text-black ${
+                    className={`w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 transition-all duration-300 ${
                       darkMode
-                        ? "bg-gray-700/50 border-gray-600"
-                        : "bg-white/50 border-gray-300 text-gray-900"
+                        ? "bg-gray-700/50 border-gray-600 focus:border-blue-500"
+                        : "bg-white/50 border-gray-300 focus:border-blue-400"
                     }`}
                   />
                 </motion.div>
 
                 {/* Start Time */}
-                <motion.div whileHover={{ scale: 1.02 }}>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="relative"
+                >
                   <label
                     className={`block text-sm font-medium mb-2 ${
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
+                    <Icon icon="mdi:clock-start" className="w-5 h-5 inline mr-2" />
                     Start Time
                   </label>
                   <input
@@ -195,21 +221,25 @@ const ExportReportsComponent = () => {
                     name="startTime"
                     value={formData.startTime}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 rounded-lg border text-black ${
+                    className={`w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 transition-all duration-300 ${
                       darkMode
-                        ? "bg-gray-700/50 border-gray-600"
-                        : "bg-white/50 border-gray-300 text-gray-900"
+                        ? "bg-gray-700/50 border-gray-600 focus:border-blue-500"
+                        : "bg-white/50 border-gray-300 focus:border-blue-400"
                     }`}
                   />
                 </motion.div>
 
                 {/* End Date */}
-                <motion.div whileHover={{ scale: 1.02 }}>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="relative"
+                >
                   <label
                     className={`block text-sm font-medium mb-2 ${
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
+                    <Icon icon="mdi:calendar-end" className="w-5 h-5 inline mr-2" />
                     End Date
                   </label>
                   <input
@@ -217,21 +247,25 @@ const ExportReportsComponent = () => {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 rounded-lg border text-black ${
+                    className={`w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 transition-all duration-300 ${
                       darkMode
-                        ? "bg-gray-700/50 border-gray-600"
-                        : "bg-white/50 border-gray-300 text-gray-900"
+                        ? "bg-gray-700/50 border-gray-600 focus:border-blue-500"
+                        : "bg-white/50 border-gray-300 focus:border-blue-400"
                     }`}
                   />
                 </motion.div>
 
                 {/* End Time */}
-                <motion.div whileHover={{ scale: 1.02 }}>
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  className="relative"
+                >
                   <label
                     className={`block text-sm font-medium mb-2 ${
                       darkMode ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
+                    <Icon icon="mdi:clock-end" className="w-5 h-5 inline mr-2" />
                     End Time
                   </label>
                   <input
@@ -239,10 +273,10 @@ const ExportReportsComponent = () => {
                     name="endTime"
                     value={formData.endTime}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-2 rounded-lg border text-black ${
+                    className={`w-full px-4 py-3 rounded-xl border-2 focus:ring-2 focus:ring-blue-400 transition-all duration-300 ${
                       darkMode
-                        ? "bg-gray-700/50 border-gray-600"
-                        : "bg-white/50 border-gray-300 text-gray-900"
+                        ? "bg-gray-700/50 border-gray-600 focus:border-blue-500"
+                        : "bg-white/50 border-gray-300 focus:border-blue-400"
                     }`}
                   />
                 </motion.div>
@@ -251,10 +285,13 @@ const ExportReportsComponent = () => {
               {/* Export Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
                 disabled={isExporting}
-                className="w-full bg-blue-500 text-white py-3 rounded-lg"
+                className={`w-full ${darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} 
+                  text-white py-4 rounded-xl shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-lg font-semibold`}
               >
+                <Icon icon={isExporting ? "mdi:loading" : "mdi:download"} className={`w-6 h-6 ${isExporting ? 'animate-spin' : ''}`} />
                 {isExporting ? "Exporting..." : "Export Data"}
               </motion.button>
             </div>
