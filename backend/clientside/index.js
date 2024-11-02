@@ -41,6 +41,7 @@ const JwtStrategy = require("passport-jwt").Strategy,
   ExtractJwt = require("passport-jwt").ExtractJwt;
 
 const User = require("./models/User");
+const { timeStamp } = require("console");
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -79,15 +80,15 @@ app.get("/latest-data", async (req, res) => {
 // Export Data Route
 app.post("/export-data", async (req, res) => {
   const { startDateTime, endDateTime, format } = req.body;
-
   try {
     const data = await ModbusData.find({
       timestamp: {
-        $gte: new Date(startDateTime),
-        $lte: new Date(endDateTime),
+        $gte: "2024-11-01 20:49:22",
+        $lte: "2024-11-01 20:59:22",
       },
     });
-
+    console.log(data)
+    
     if (!data.length) {
       return res.status(404).json({ message: "No data available for this range" });
     }

@@ -1,15 +1,13 @@
 import "./output.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginComponent from "./routes/Login";
 import SignupComponent from "./routes/Signup";
 import HomeComponent from "./routes/Home";
 import SettingsComponent from "./routes/Settings";
-import ExportComponent from "./routes/Export";
-import ProtectedRoute from "./components/shared/ProtectedRoute";
-import React, { useState, useEffect } from "react"; // Correctly import useEffect
-
+import ExportReportsComponent from "./routes/Export";
+import React, { useState, useEffect } from "react";
 import Cookies from 'js-cookie';
-
+import ProtectedRoute from "./components/shared/ProtectedRoute"; 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -25,22 +23,40 @@ function App() {
     <div className="w-screen h-screen font-poppins">
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<HomeComponent />} />
-          <Route path='/login' element={<LoginComponent setIsAuthenticated={setIsAuthenticated} />} />
-          <Route path='/signup' element={<SignupComponent />} />
-          <Route path='/home' element={
-            <ProtectedRoute
-              element={<HomeComponent />}
-              isAuthenticated={isAuthenticated}
-            />
-          } />
-          <Route path='/setting' element={<SettingsComponent />} />
-          <Route path='/exports' element={
-            <ProtectedRoute
-              element={<ExportComponent/>}
-              isAuthenticated={isAuthenticated}
-            />
-            } />
+          {/* Protect root / route */}
+          <Route 
+            path="/" 
+            element={
+              isAuthenticated 
+                ? <HomeComponent /> 
+                : <Navigate to="/login" replace /> 
+            } 
+          />
+          
+          <Route path="/login" element={<LoginComponent setIsAuthenticated={setIsAuthenticated} />} />
+          <Route path="/signup" element={<SignupComponent />} />
+
+          {/* Protect /home route with ProtectedRoute */}
+          <Route 
+            path="/home" 
+            element={
+              <ProtectedRoute>
+                <HomeComponent />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route path="/setting" element={<SettingsComponent />} />
+
+          {/* Protect /exports route with ProtectedRoute */}
+          <Route 
+            path="/exports" 
+            element={
+              <ProtectedRoute>
+                <ExportReportsComponent />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </div>

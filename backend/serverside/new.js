@@ -1,39 +1,134 @@
-const ModbusRTU = require("modbus-serial");
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const passport = require("passport");
+const bcrypt = require("bcrypt");
+const authRoutes = require("./routes/Auth");
+const { getToken } = require("./utils/helpers.js");
+const ModbusData = require("./models/ModbusData"); // Import ModbusData model
+const { Parser } = require("json2csv"); // For CSV export
+const XLSX = require("xlsx"); // For Excel export
+const pdf = require("pdfkit"); // For PDF export
+const fs = require("fs"); // File system to save files temporarily
 
-// Create a Modbus client instance
-const client = new ModbusRTU();
+const app = express();
+const PORT = 8000;
 
-// Define the serial port path (adjust for your system)
-const serialPortPath = '/dev/ttyUSB0'; // For Linux
-// const serialPortPath = 'COM3'; // For Windows
-
-const connectAndReadModbusASCII = async () => {
-  try {
-    // Connect to Modbus using ASCII mode via the serial port
-    await client.connectAsciiSerial(serialPortPath, { 
-      baudRate: 9600,    // Adjust as needed
-      parity: 'none',    // Parity: 'none', 'even', or 'odd'
-      stopBits: 1,       // Stop bits, typically 1 or 2
-      dataBits: 7       // Data bits, typically 8
-    });
-    console.log("Connected to Modbus ASCII over USB");
-
-    // Read data from Modbus registers (example: read 10 holding registers starting from address 0)
-    const data = await client.readHoldingRegisters(0, 10); 
-    console.log("Data received:", data.data);
-  } catch (err) {
-    console.error("Error:", err.message);
-  } finally {
-    // Ensure the serial port is closed when done
-    if (client.isOpen) {
-      try {
-        await client.close();
-        console.log("Serial port closed");
-      } catch (closeErr) {
-        console.error("Error closing port:", closeErr.message);
-      }
+// MongoDB connection
+mongoose
+  .connect(
+    "mongodb+srv://iamgaurav345:gaurav345@cluster0.guqlmjb.mongodb.net/modbus_database?retryWrites=true&w=majority",
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
     }
-  }
+  )
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+// Middleware
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+app.use(express.json());
+app.use(passport.initialize());
+
+// JWT Strategy for Passport
+const JwtStrategy = require("passport-jwt").Strategy,
+  ExtractJwt = require("passport-jwt").ExtractJwt;
+
+const User = require("./models/User");
+
+const opts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: "gaurav345", // Your JWT secret
 };
 
-connectAndReadModbusASCII();
+passport.use(
+  new JwtStrategy(opts, async (jwt_payload, done) => {
+    try {
+      const user = await User.findById(jwt_payload.sub);
+      return user ? done(null, user) : done(null, false);
+    } catch (err) {
+      return done(err, false);
+    }
+  })
+);
+
+// Routes
+app.use("/auth", authRoutes); // Auth routes
+app.get("/", (req, res) => res.send("Hello World"));
+
+// Route to fetch latest Modbus data
+app.get("/latest-data", async (req, res) => {
+  try {
+    const latestData = await ModbusData.findOne().sort({ _id: -1 });
+    latestData
+      ? res.json(latestData)
+      : res.status(404).json({ message: "No data found" });
+  } catch (error) {
+    console.error("Error fetching latest data:", error);
+    res.status(500).json({ message: "Error fetching data", error });
+  }
+});
+
+// Export Data Route
+app.post("/export-data", async (req, res) => {
+  const { startDateTime, endDateTime, format } = req.body;
+
+  try {
+    // Convert ISO string dates to Date objects for MongoDB query
+    const data = await ModbusData.find({
+      timestamp: {
+        $gte: new Date(startDateTime),
+        $lte: new Date(endDateTime)
+      }
+    });
+
+    if (!data.length) {
+      return res.status(404).json({ message: "No data available for this range" });
+    }
+
+    if (format === "csv") {
+      const json2csvParser = new Parser();
+      const csvData = json2csvParser.parse(data);
+      res.header("Content-Type", "text/csv");
+      res.attachment(`export-${startDateTime}-${endDateTime}.csv`);
+      res.send(csvData);
+    } else if (format === "xlsx") {
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(data.map((item) => item.toObject()));
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+      res.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.attachment(`export-${startDateTime}-${endDateTime}.xlsx`);
+      res.send(buffer);
+    } else if (format === "pdf") {
+      const doc = new pdf();
+      res.header("Content-Type", "application/pdf");
+      res.attachment(`export-${startDateTime}-${endDateTime}.pdf`);
+      data.forEach((item) => {
+        doc.text(`Timestamp: ${item.timestamp}`);
+        doc.text(`Registers: ${JSON.stringify(item.registers)}`);
+        doc.moveDown();
+      });
+      doc.end();
+      doc.pipe(res);
+    } else {
+      res.status(400).json({ message: "Invalid format specified" });
+    }
+  } catch (error) {
+    console.error("Error exporting data:", error);
+    res.status(500).json({ message: "Export failed", error });
+  }
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+// End of Selection
+

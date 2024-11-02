@@ -9,8 +9,10 @@ const ExportReportsComponent = () => {
   const [formData, setFormData] = useState({
     startDate: "",
     startTime: "00:00",
+    startSeconds: "00",
     endDate: "",
     endTime: "23:59",
+    endSeconds: "59",
     format: "csv",
   });
 
@@ -22,67 +24,73 @@ const ExportReportsComponent = () => {
     }));
   };
 
-  const handleQuickSelect = (minutes) => {
-    const endDate = new Date();
-    const startDate = new Date(endDate - minutes * 60 * 1000);
-
-    setFormData((prevState) => ({
-      ...prevState,
-      startDate: startDate.toISOString().split("T")[0],
-      startTime: startDate.toTimeString().slice(0, 5),
-      endDate: endDate.toISOString().split("T")[0],
-      endTime: endDate.toTimeString().slice(0, 5),
-    }));
+  // Helper to format date and time fields
+  const formatDateTime = (date) => {
+    const formattedDate = date.toISOString().split("T")[0];
+    const formattedTime = date.toTimeString().split(" ")[0].slice(0, 5);
+    const formattedSeconds = date.toTimeString().split(" ")[0].slice(6, 8);
+    return { formattedDate, formattedTime, formattedSeconds };
   };
 
-  const handleLast24Hours = () => {
-    const endDate = new Date();
-    const startDate = new Date(endDate - 24 * 60 * 60 * 1000);
+  // Set predefined time ranges
+  const setTimeRange = (hours, minutes) => {
+    const endDateTime = new Date();
+    const startDateTime = new Date(endDateTime.getTime() - (hours * 60 + minutes) * 60000);
 
-    setFormData((prevState) => ({
-      ...prevState,
-      startDate: startDate.toISOString().split("T")[0],
-      startTime: startDate.toTimeString().slice(0, 5),
-      endDate: endDate.toISOString().split("T")[0],
-      endTime: endDate.toTimeString().slice(0, 5),
-    }));
+    const { formattedDate: startDate, formattedTime: startTime, formattedSeconds: startSeconds } = formatDateTime(startDateTime);
+    const { formattedDate: endDate, formattedTime: endTime, formattedSeconds: endSeconds } = formatDateTime(endDateTime);
+
+    setFormData({
+      ...formData,
+      startDate,
+      startTime,
+      startSeconds,
+      endDate,
+      endTime,
+      endSeconds,
+    });
   };
 
   const handleExport = async () => {
     try {
       setIsExporting(true);
+  
+      const startDateTime = `${formData.startDate} ${formData.startTime}:${formData.startSeconds}`;
+      const endDateTime = `${formData.endDate} ${formData.endTime}:${formData.endSeconds}`;
+      console.log(startDateTime);  
+      console.log(endDateTime);    
+  
       const response = await fetch("http://localhost:8000/export-data", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          startDateTime: `${formData.startDate}T${formData.startTime}:00`,
-          endDateTime: `${formData.endDate}T${formData.endTime}:00`,
+          startDateTime,
+          endDateTime,
           format: formData.format,
         }),
       });
-
+  
       if (!response.ok) {
-        throw new Error('Export failed');
+        throw new Error("Export failed");
       }
-
+  
       const blob = await response.blob();
       if (blob.size === 0) {
         alert("No data available for the selected range.");
         return;
       }
-
-      // Create download link
+  
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `export-${formData.startDate}-to-${formData.endDate}.${formData.format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-
+  
     } catch (error) {
       console.error("Export error:", error);
       alert("Failed to export data. Please try again.");
@@ -93,7 +101,7 @@ const ExportReportsComponent = () => {
 
   return (
     <>
-    <NavbarComponent darkMode={darkMode}/>
+      <NavbarComponent darkMode={darkMode} />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -134,43 +142,24 @@ const ExportReportsComponent = () => {
             </motion.div>
 
             <div className="space-y-6">
-              {/* Quick Select Buttons */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleQuickSelect(15)}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Last 15 min
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleQuickSelect(30)}
-                  className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-lg text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Last 30 min
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleQuickSelect(90)}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Last 90 min
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLast24Hours}
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  Last 24 hours
-                </motion.button>
+              <div className="flex gap-2 mb-4">
+                <button onClick={() => setTimeRange(24, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
+                  Last 24 Hours
+                </button>
+                <button onClick={() => setTimeRange(1, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
+                  Last 1 Hour
+                </button>
+                <button onClick={() => setTimeRange(48, 0)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
+                  Last 2 Days
+                </button>
+                <button onClick={() => setTimeRange(0, 30)} className="bg-blue-500 text-white py-2 px-4 rounded-lg">
+                  Last 30 Minutes
+                </button>
               </div>
 
+              {/* Date and Time Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Start Date */}
                 <motion.div whileHover={{ scale: 1.02 }}>
                   <label
                     className={`block text-sm font-medium mb-2 ${
@@ -188,9 +177,11 @@ const ExportReportsComponent = () => {
                       darkMode
                         ? "bg-gray-700/50 border-gray-600"
                         : "bg-white/50 border-gray-300 text-gray-900"
-                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    }`}
                   />
                 </motion.div>
+
+                {/* Start Time */}
                 <motion.div whileHover={{ scale: 1.02 }}>
                   <label
                     className={`block text-sm font-medium mb-2 ${
@@ -208,12 +199,11 @@ const ExportReportsComponent = () => {
                       darkMode
                         ? "bg-gray-700/50 border-gray-600"
                         : "bg-white/50 border-gray-300 text-gray-900"
-                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    }`}
                   />
                 </motion.div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* End Date */}
                 <motion.div whileHover={{ scale: 1.02 }}>
                   <label
                     className={`block text-sm font-medium mb-2 ${
@@ -231,9 +221,11 @@ const ExportReportsComponent = () => {
                       darkMode
                         ? "bg-gray-700/50 border-gray-600"
                         : "bg-white/50 border-gray-300 text-gray-900"
-                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    }`}
                   />
                 </motion.div>
+
+                {/* End Time */}
                 <motion.div whileHover={{ scale: 1.02 }}>
                   <label
                     className={`block text-sm font-medium mb-2 ${
@@ -251,59 +243,19 @@ const ExportReportsComponent = () => {
                       darkMode
                         ? "bg-gray-700/50 border-gray-600"
                         : "bg-white/50 border-gray-300 text-gray-900"
-                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    }`}
                   />
                 </motion.div>
               </div>
 
-              <motion.div whileHover={{ scale: 1.02 }}>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    darkMode ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Export Format
-                </label>
-                <select
-                  name="format"
-                  value={formData.format}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2 rounded-lg border text-black ${
-                    darkMode
-                      ? "bg-gray-700/50 border-gray-600"
-                      : "bg-white/50 border-gray-300 text-gray-900"
-                  } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
-                >
-                  <option value="csv">CSV</option>
-                  <option value="xlsx">Excel</option>
-                  <option value="pdf">PDF</option>
-                </select>
-              </motion.div>
-
+              {/* Export Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
                 onClick={handleExport}
                 disabled={isExporting}
-                className={`w-full relative overflow-hidden group bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50`}
+                className="w-full bg-blue-500 text-white py-3 rounded-lg"
               >
-                <span className="absolute w-0 h-0 transition-all duration-300 ease-out bg-white rounded-full group-hover:w-96 group-hover:h-96 opacity-10"></span>
-                <div className="flex items-center justify-center space-x-2">
-                  {isExporting ? (
-                    <>
-                      <Icon
-                        icon="eos-icons:loading"
-                        className="animate-spin w-5 h-5"
-                      />
-                      <span>Exporting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon icon="mdi:download" className="w-5 h-5" />
-                      <span>Export Data</span>
-                    </>
-                  )}
-                </div>
+                {isExporting ? "Exporting..." : "Export Data"}
               </motion.button>
             </div>
           </motion.div>
