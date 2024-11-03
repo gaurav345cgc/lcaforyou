@@ -52,7 +52,7 @@ const HomeComponent = () => {
     // Fetch modbus data
     const fetchModbusData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/latest-data");
+        const response = await fetch("http://localhost:5050/latest-data");
         const data = await response.json();
 
         // Transform the data into array format for table display
@@ -274,7 +274,7 @@ const HomeComponent = () => {
                     {
                       title: "Total Transformers",
                       value: transformerStats.totalTransformers,
-                      icon: "mdi:transformer",
+                      icon: "mdi-poll",
                       color: "from-blue-500 via-blue-400 to-blue-600",
                     },
                     {

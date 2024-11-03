@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 
 function NavbarComponent({ darkMode }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = () => {
     Cookies.remove("token"); 
@@ -19,13 +20,25 @@ function NavbarComponent({ darkMode }) {
             <motion.a 
               whileHover={{ scale: 1.05 }}
               href="/home"
-              className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+              className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
             >
               LCA Dashboard
             </motion.a>
           </div>
 
-          <div className="flex items-center space-x-6">
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`p-2 rounded-xl ${darkMode ? 'bg-gray-700/50 text-white' : 'bg-gray-200/30 text-white'}`}
+            >
+              <Icon icon={isMobileMenuOpen ? "mdi:close" : "mdi:menu"} className="w-6 h-6" />
+            </motion.button>
+          </div>
+
+          {/* Desktop menu */}
+          <div className="hidden md:flex items-center space-x-6">
             <motion.a
               whileHover={{ scale: 1.1 }}
               href="/home"
@@ -95,6 +108,48 @@ function NavbarComponent({ darkMode }) {
             </div>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:hidden"
+          >
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                href="/home"
+                className={`block p-3 rounded-xl ${darkMode ? 'bg-gray-700/50 text-white hover:bg-gray-600/50' : 'bg-gray-200/30 text-white hover:bg-gray-300/30'} transition-all duration-300`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon icon="mdi:view-dashboard" className="w-6 h-6" />
+                  <span>Dashboard</span>
+                </div>
+              </motion.a>
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                href="/exports"
+                className={`block p-3 rounded-xl ${darkMode ? 'bg-gray-700/50 text-white hover:bg-gray-600/50' : 'bg-gray-200/30 text-white hover:bg-gray-300/30'} transition-all duration-300`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon icon="mdi:file-document" className="w-6 h-6" />
+                  <span>Reports</span>
+                </div>
+              </motion.a>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className={`w-full p-3 rounded-xl ${darkMode ? 'bg-gray-700/50 text-white hover:bg-gray-600/50' : 'bg-gray-200/30 text-white hover:bg-gray-300/30'} transition-all duration-300`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon icon="mdi:account" className="w-6 h-6" />
+                  <span>Profile</span>
+                </div>
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
       </div>
     </nav>
   );
