@@ -60,7 +60,7 @@ const ExportReportsComponent = () => {
       console.log(startDateTime);  
       console.log(endDateTime);    
   
-      const response = await fetch("http://localhost:5050/export-data", {
+      const response = await fetch("http://localhost:5000/export-data", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

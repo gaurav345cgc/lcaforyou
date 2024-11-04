@@ -52,7 +52,7 @@ const HomeComponent = () => {
     // Fetch modbus data
     const fetchModbusData = async () => {
       try {
-        const response = await fetch("http://localhost:5050/latest-data");
+        const response = await fetch("http://localhost:5000/latest-data");
         const data = await response.json();
 
         // Transform the data into array format for table display

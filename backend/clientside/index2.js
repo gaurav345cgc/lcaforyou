@@ -12,7 +12,7 @@ const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const ModbusData = require("./models/ModbusData.js")
 const app = express();
-const PORT = 5050; // Default port
+const PORT = 5000; // Default port
 
 // MongoDB connection
 const mongoURI = "mongodb+srv://iamgaurav345:gaurav345@cluster0.guqlmjb.mongodb.net/modbus_database?retryWrites=true&w=majority";
