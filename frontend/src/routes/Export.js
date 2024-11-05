@@ -52,52 +52,60 @@ const ExportReportsComponent = () => {
   };
 
   const handleExport = async () => {
-    try {
-      setIsExporting(true);
-  
-      const startDateTime = `${formData.startDate} ${formData.startTime}:${formData.startSeconds}`;
-      const endDateTime = `${formData.endDate} ${formData.endTime}:${formData.endSeconds}`;
-      console.log(startDateTime);  
-      console.log(endDateTime);    
-  
-      const response = await fetch("http://localhost:5000/export-data", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          startDateTime,
-          endDateTime,
-          format: formData.format,
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error("Export failed");
-      }
-  
-      const blob = await response.blob();
-      if (blob.size === 0) {
-        alert("No data available for the selected range.");
-        return;
-      }
-  
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `export-${formData.startDate}-to-${formData.endDate}.${formData.format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-  
-    } catch (error) {
-      console.error("Export error:", error);
-      alert("Failed to export data. Please try again.");
-    } finally {
-      setIsExporting(false);
+  try {
+    setIsExporting(true);
+
+    const startDateTime = `${formData.startDate} ${formData.startTime}:${formData.startSeconds}`;
+    const endDateTime = `${formData.endDate} ${formData.endTime}:${formData.endSeconds}`;
+    
+    console.log("Start DateTime:", startDateTime);
+    console.log("End DateTime:", endDateTime);
+    
+    const response = await fetch("http://localhost:5000/export-data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        startDateTime,
+        endDateTime,
+        format: formData.format,
+      }),
+    });
+
+    // Check if the response is okay
+    console.log("Response status:", response.status);
+    if (!response.ok) {
+      const errorText = await response.text(); // Read error message from the response
+      throw new Error(`Export failed: ${response.status} - ${errorText}`);
     }
-  };
+
+    // Read the response as a blob
+    const blob = await response.blob();
+    console.log("Blob size:", blob.size); // Log blob size
+
+    if (blob.size === 0) {
+      alert("No data available for the selected range.");
+      return;
+    }
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `export-${formData.startDate}-to-${formData.endDate}.${formData.format}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+  } catch (error) {
+    console.error("Export error:", error);
+    alert("Failed to export data. Please try again.");
+  } finally {
+    setIsExporting(false);
+  }
+};
+
 
   return (
     <>
